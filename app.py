@@ -6,6 +6,13 @@ import requests
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 from streamlit_lottie import st_lottie
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+import nltk
+
+# Download NLTK resources
+nltk.download('stopwords')
 
 # 🎨 Gradient background
 st.markdown("""
@@ -61,10 +68,6 @@ animation = load_lottie_url("https://lottie.host/3acb0cb2-6f82-45b3-84f2-e73dd3e
 if animation:
     st_lottie(animation, height=180)
 
-# 📦 Load trained model & vectorizer
-model = joblib.load("sentiment_model.pkl")
-vectorizer = joblib.load("vectorizer.pkl")
-
 # 🔧 Preprocessing function
 def preprocess_text(text):
     ps = PorterStemmer()
@@ -72,6 +75,39 @@ def preprocess_text(text):
     words = text.lower().split()
     words = [ps.stem(word) for word in words if word not in stopwords.words('english')]
     return ' '.join(words)
+
+# 🏋️ Train model function (runs only once)
+@st.cache_resource
+def train_model():
+    try:
+        # Load both datasets
+        df1 = pd.read_csv('amazon_reviews_dataset1.csv')
+        df2 = pd.read_csv('amazon_reviews_dataset2.csv')
+        df = pd.concat([df1, df2]).drop_duplicates()
+        
+        # Check if columns exist
+        if 'review' not in df.columns or 'liked' not in df.columns:
+            st.error("CSV files must contain 'review' and 'liked' columns")
+            return None, None
+            
+        df['cleaned_review'] = df['review'].apply(preprocess_text)
+        
+        # Vectorize and train
+        vectorizer = TfidfVectorizer(max_features=5000)
+        X = vectorizer.fit_transform(df['cleaned_review'])
+        y = df['liked']
+        
+        model = LogisticRegression(class_weight='balanced', max_iter=1000)
+        model.fit(X, y)
+        
+        return model, vectorizer
+        
+    except Exception as e:
+        st.error(f"Error loading datasets: {str(e)}")
+        return None, None
+
+# 📦 Load trained model & vectorizer
+model, vectorizer = train_model()
 
 # 🧠 Title and Instructions
 st.markdown("""
@@ -82,12 +118,9 @@ st.markdown("""
         margin-top: 10px;
         margin-bottom: 5px;
     '>
-        🍽️ Sentiment Analysis - Restaurant Reviews
+         Sentiment Analysis of Amazon Product Reviews
     </h1>
 """, unsafe_allow_html=True)
-
-
-
 
 # ✏️ Input Area
 st.markdown("### <div class='review-label'>✍ Enter your review below:</div>", unsafe_allow_html=True)
@@ -97,16 +130,20 @@ review_input = st.text_area("", placeholder="Type your review...", key="review",
 if st.button("🔍 Predict Sentiment"):
     if review_input.strip() == "":
         st.warning("⚠️ Please enter a review.")
+    elif model is None or vectorizer is None:
+        st.error("Model failed to load. Check your dataset files.")
     else:
         cleaned = preprocess_text(review_input)
-        vectorized = vectorizer.transform([cleaned]).toarray()
-        prediction = model.predict(vectorized)
-
-        if prediction[0] == 1:
-            st.success("😍 Positive Review")
+        vectorized = vectorizer.transform([cleaned])
+        
+        # Get probability for better insight
+        proba = model.predict_proba(vectorized)[0][1]
+        prediction = 1 if proba > 0.45 else 0
+        
+        if prediction == 1:
+            st.success(f"😍 Positive Review ({proba:.0%} confidence)")
         else:
-            st.error("😠 Negative Review")
-
+            st.error(f"😠 Negative Review ({(1-proba):.0%} confidence)")
 
 # 🧾 Footer
 st.markdown("""
@@ -116,3 +153,4 @@ Made with ❤️ by <b>Sebi Verma</b><br>
 United College of Engineering and Research
 </p>
 """, unsafe_allow_html=True)
+
