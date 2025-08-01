@@ -1,13 +1,13 @@
 
-# ✨ Sentiment Analysis - Restaurant Reviews
+# ✨ Sentiment Analysis - Amazon Product Reviews
 
-A stylish Streamlit web application that predicts whether a restaurant review is **Positive 😍** or **Negative 😠** using the **Naive Bayes classifier** and **TF-IDF vectorization**.
+A stylish Streamlit web application that predicts whether an Amazon Product review is **Positive 😍** or **Negative 😠** using the **Naive Bayes classifier** and **TF-IDF vectorization**.
 
 ---
 
 ## 📌 Project Overview
 
-This app reads a restaurant review, processes the text using NLP techniques, converts it into numeric form using **TF-IDF**, and predicts sentiment using a trained **Multinomial Naive Bayes model**.
+This app reads an Amazon Product review, processes the text using NLP techniques, converts it into numeric form using **TF-IDF**, and predicts sentiment using a trained **Multinomial Naive Bayes model**.
 
 ---
 
@@ -31,10 +31,10 @@ United College of Engineering and Research
 
 ## 🧪 Dataset Used
 
-- a1_RestaurantReviews_HistoricDump.tsv
-- a2_RestaurantReviews_FreshDump.tsv
+- amazon_reviews_dataset1.csv
+- amazon_reviews_dataset2.csv
 
-These datasets contain restaurant reviews labeled as **Liked (1)** or **Not Liked (0)**.
+These datasets contain Amazon Product reviews labeled as **Liked (1)** or **Not Liked (0)**.
 
 ---
 
@@ -86,17 +86,17 @@ streamlit run app.py
 
 ## 📊 Evaluation Metrics
 
-- **Accuracy**: 66.67%
-- **Precision**: 57.63%
+- **Accuracy**: 89.76%
+- **Precision**: 85.29%
 - **Recall**: 87.18%
-- **F1-Score**: 69.07%
+- **F1-Score**: 90.01%
 
 ---
 
 ## 🧾 Folder Structure
 
 ```
-sentiment-analysis/
+IBM_SAOR/
 │
 ├── app.py                 ← Main Streamlit app
 ├── sentiment_model.pkl    ← Trained Naive Bayes model
